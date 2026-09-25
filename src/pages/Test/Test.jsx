@@ -1,18 +1,26 @@
 import Loader from "@/components/common/Loader";
 import { useAuth } from "@/contexts/auth-context";
+import { Button } from "primereact/button";
 
-export default function Home() {
-  const { user, profil, loadingAuth } = useAuth();
+export default function Test() {
+  const { user, profil, loadingAuth, deconnexion } = useAuth();
 
   if (loadingAuth) {
-    return <Loader/>
+    return <Loader />;
   }
 
   return (
     <div>
-      <p>Utilisateur : {user?.email}</p>
-      <p>Organisation : {profil?.organisationId}</p>
-      <p>Rôle : {profil?.role}</p>
+      <h2>Test Firebase</h2>
+
+      <p>Utilisateur : {user?.email ?? "Aucun"}</p>
+
+      <p>Organisation : {profil?.organisationId ?? "Aucune"}</p>
+
+      <p>Rôle : {profil?.role ?? "Aucun"}</p>
+
+
+      <Button label="Déconnexion" onClick={deconnexion} className="mt-10"/>
     </div>
   );
 }
