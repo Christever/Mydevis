@@ -7,7 +7,8 @@ const Error = lazy(() => import("@/pages/Error/Error"));
 const Clients = lazy(() => import("@/pages/Clients/Clients"));
 const Devis = lazy(() => import("@/pages/Devis/Devis"));
 const Parameters = lazy(() => import("@/pages/Parametres/Parametres"));
-const DevisDetails = lazy(()=>import("@/pages/Devis/DevisDetails"))
+const DevisDetails = lazy(() => import("@/pages/Devis/DevisDetails"));
+const Test = lazy(() => import("@/pages/Test/Test"));
 
 export const router = createBrowserRouter(
   [
@@ -60,10 +61,18 @@ export const router = createBrowserRouter(
             </Suspense>
           ),
         },
+        {
+          path: "test",
+          element: (
+            <Suspense>
+              <Test />
+            </Suspense>
+          ),
+        },
       ],
     },
   ],
   {
-    basename: import.meta.env.PROD ? "/mydevis":"/",
+    basename: import.meta.env.PROD ? "/mydevis" : "/",
   },
 );

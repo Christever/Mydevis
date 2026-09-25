@@ -12,6 +12,7 @@ import { ConfirmDialog } from "primereact/confirmdialog";
 import { DevisProvider } from "@/contexts/devis-context";
 import { ParametresProvider } from "@/contexts/parametres-context";
 import { ClientsProvider } from "@/contexts/clients-context";
+import { AuthProvider } from "@/contexts/auth-context";
 
 export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,13 +25,15 @@ export default function MainLayout() {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="min-h-0 flex-1 overflow-y-auto p-6">
-          <ParametresProvider>
-            <ClientsProvider>
-              <DevisProvider>
-                <Outlet />
-              </DevisProvider>
-            </ClientsProvider>
-          </ParametresProvider>
+          <AuthProvider>
+            <ParametresProvider>
+              <ClientsProvider>
+                <DevisProvider>
+                  <Outlet />
+                </DevisProvider>
+              </ClientsProvider>
+            </ParametresProvider>
+          </AuthProvider>
         </main>
       </div>
 

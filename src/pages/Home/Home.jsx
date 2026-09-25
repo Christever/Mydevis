@@ -5,7 +5,7 @@ import CardDevis from "@/components/Devis/CardDevis";
 import Loader from "@/components/common/Loader";
 import Entete from "@/components/common/EnTete";
 
-import { calculerTotalDevis, calculerTotalTTC } from "@/utils/devis-calculs";
+import {calculerTotalTTC } from "@/utils/devis-calculs";
 
 import { Link } from "react-router-dom";
 import { useContext } from "react";
@@ -61,6 +61,8 @@ export default function Home() {
   if (loadingDevis) {
     return <Loader />;
   }
+
+
 
   return (
     <div className="space-y-6">

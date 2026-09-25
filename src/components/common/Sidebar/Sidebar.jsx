@@ -1,20 +1,15 @@
-
 import { NavLink } from "react-router-dom";
 
 import { Button } from "primereact/button";
 import { Sidebar as PrimeSidebar } from "primereact/sidebar";
 
-export default function Sidebar({open, onClose}) {
-
-
+export default function Sidebar({ open, onClose }) {
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 transition-colors duration-200 ${
       isActive
         ? "bg-blue-600 text-white"
         : "text-slate-300 hover:bg-slate-700 hover:text-white"
     }`;
-
-
 
   return (
     <>
@@ -41,33 +36,35 @@ export default function Sidebar({open, onClose}) {
               <span>Accueil</span>
             </NavLink>
 
-            <NavLink to="/clients" className={navLinkClass}>
+            <NavLink to="clients" className={navLinkClass}>
               <i className="pi pi-users" />
               <span>Clients</span>
             </NavLink>
 
-            <NavLink to="/devis" className={navLinkClass}>
+            <NavLink to="devis" className={navLinkClass}>
               <i className="pi pi-file" />
               <span>Devis</span>
             </NavLink>
 
-            <NavLink to="/parameters" className={navLinkClass}>
+            <NavLink to="parameters" className={navLinkClass}>
               <i className="pi pi-cog" />
               <span>Paramètres</span>
             </NavLink>
+
+            {import.meta.env.DEV && (
+              <NavLink to="test" className={navLinkClass} onClick={onClose}>
+                <i className="pi pi-wrench" />
+                <span>Test</span>
+              </NavLink>
+            )}
           </div>
         </nav>
       </aside>
 
-
       {/* =========================
             SIDEBAR MOBILE
         ========================= */}
-      <PrimeSidebar
-        visible={open}
-        onHide={onClose}
-        className="bg-slate-800"
-      >
+      <PrimeSidebar visible={open} onHide={onClose} className="bg-slate-800">
         {/* Logo / Nom */}
         <div className="flex flex-col items-center justify-center pb-6">
           <h1 className="text-xl font-bold text-white">MS PEINTURE</h1>
@@ -87,29 +84,17 @@ export default function Sidebar({open, onClose}) {
               <span>Accueil</span>
             </NavLink>
 
-            <NavLink
-              to="/clients"
-              className={navLinkClass}
-              onClick={onClose}
-            >
+            <NavLink to="clients" className={navLinkClass} onClick={onClose}>
               <i className="pi pi-users" />
               <span>Clients</span>
             </NavLink>
 
-            <NavLink
-              to="/devis"
-              className={navLinkClass}
-              onClick={onClose}
-            >
+            <NavLink to="devis" className={navLinkClass} onClick={onClose}>
               <i className="pi pi-file" />
               <span>Devis</span>
             </NavLink>
 
-            <NavLink
-              to="/parameters"
-              className={navLinkClass}
-              onClick={onClose}
-            >
+            <NavLink to="parameters" className={navLinkClass} onClick={onClose}>
               <i className="pi pi-cog" />
               <span>Paramètres</span>
             </NavLink>
