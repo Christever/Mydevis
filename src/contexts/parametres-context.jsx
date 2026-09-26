@@ -1,8 +1,13 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+
+import { db } from "@/firebase/config";
+import { useAuth } from "@/contexts/auth-context";
 
 export const ParametresContext = createContext(null);
 
 export function ParametresProvider({ children }) {
+  const { profil, loadingAuth } = useAuth();
   const [loadingParams, setLoadingParams] = useState(false);
 
   // Societé assujétie à la TVA ou pas
@@ -56,6 +61,129 @@ export function ParametresProvider({ children }) {
   // Durée validité d'un devis
   const [dureeValiditeDevis, setDureeValiditeDevis] = useState(10);
 
+  useEffect(() => {
+    if (loadingAuth || !profil?.organisationId) {
+      return;
+    }
+
+    async function chargerParametres() {
+      setLoadingParams(true);
+
+      try {
+        const configRef = doc(
+          db,
+          "organisations",
+          profil.organisationId,
+          "parametres",
+          "configuration",
+        );
+
+        const configSnap = await getDoc(configRef);
+
+        if (!configSnap.exists()) {
+          throw new Error(
+            "Configuration des paramètres introuvable dans Firestore.",
+          );
+        }
+
+        const data = configSnap.data();
+
+        setTvaApplicable(data.tvaApplicable);
+        setDureeValiditeDevis(data.dureeValiditeDevis);
+        setTvaRates(data.tvaRates);
+      } catch (error) {
+        console.error("Erreur lors du chargement des paramètres :", error);
+      } finally {
+        setLoadingParams(false);
+      }
+    }
+
+    chargerParametres();
+  }, [profil, loadingAuth]);
+
+  //#region MISES A JOUR BDD
+  // Validité des devis
+  async function sauvegarderDureeValiditeDevis(valeur) {
+    if (!profil?.organisationId) {
+      return;
+    }
+
+    try {
+      setDureeValiditeDevis(valeur);
+      const configRef = doc(
+        db,
+        "organisations",
+        profil.organisationId,
+        "parametres",
+        "configuration",
+      );
+
+      await updateDoc(configRef, {
+        dureeValiditeDevis: valeur,
+      });
+    } catch (error) {
+      console.error(
+        "Erreur lors de la sauvegarde de la durée de validité :",
+        error,
+      );
+    }
+  }
+
+  // TVA Applicable
+  async function sauvegarderTvaApplicable(valeur) {
+    if (!profil?.organisationId) {
+      return;
+    }
+
+    try {
+      setTvaApplicable(valeur);
+
+      const configRef = doc(
+        db,
+        "organisations",
+        profil.organisationId,
+        "parametres",
+        "configuration",
+      );
+
+      await updateDoc(configRef, {
+        tvaApplicable: valeur,
+      });
+    } catch (error) {
+      console.error(
+        "Erreur lors de la sauvegarde de l'assujettissement à la TVA :",
+        error,
+      );
+    }
+  }
+
+  // Add TVA
+  async function sauvegarderTvaRates(nouveauxTaux) {
+    if (!profil?.organisationId) {
+      return;
+    }
+
+    try {
+      setTvaRates(nouveauxTaux);
+
+      const configRef = doc(
+        db,
+        "organisations",
+        profil.organisationId,
+        "parametres",
+        "configuration",
+      );
+
+      await updateDoc(configRef, {
+        tvaRates: nouveauxTaux,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde des taux de TVA :", error);
+    }
+  }
+
+  //#endregion
+
   //#region  TVA
 
   // Defaults rates TVA
@@ -90,14 +218,17 @@ export function ParametresProvider({ children }) {
       setLoadingParams(false);
       return false;
     }
-    setTvaRates((currentRates) => [
-      ...currentRates,
+
+    const nouveauxTaux = [
+      ...tvaRates,
       {
         id: Date.now(),
         taux: newTax,
         actif: true,
       },
-    ]);
+    ];
+
+    sauvegarderTvaRates(nouveauxTaux);
 
     setLoadingParams(false);
     return true;
@@ -106,11 +237,13 @@ export function ParametresProvider({ children }) {
   // ToggleTVA (ACTIF/INACTIF)
   const toggleTva = (id) => {
     setLoadingParams(true);
-    setTvaRates((currentRates) =>
-      currentRates.map((tva) =>
-        tva.id === id ? { ...tva, actif: !tva.actif } : tva,
-      ),
+
+    const nouveauxTaux = tvaRates.map((tva) =>
+      tva.id === id ? { ...tva, actif: !tva.actif } : tva,
     );
+
+    sauvegarderTvaRates(nouveauxTaux);
+
     setLoadingParams(false);
   };
 
@@ -121,13 +254,13 @@ export function ParametresProvider({ children }) {
       value={{
         loadingParams,
         tvaApplicable,
-        setTvaApplicable,
+        setTvaApplicable: sauvegarderTvaApplicable,
         tvaRates,
         setTvaRates,
         addTvaRate,
         toggleTva,
         dureeValiditeDevis,
-        setDureeValiditeDevis,
+        setDureeValiditeDevis: sauvegarderDureeValiditeDevis,
         units,
         setUnits,
         addUnit,

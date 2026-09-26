@@ -21,9 +21,8 @@ export default function Login() {
     event.preventDefault();
 
     try {
-      await connexion(email, password);
-      console.log(profil)
-      toast.success(`Bienvenu, ${profil.pseudo}`);
+      const result = await connexion(email, password);
+      toast.success(`Bienvenu, ${result.profil.pseudo}`);
       navigate("/");
     } catch (error) {
       toast.error("Impossible de vous connecter.")
