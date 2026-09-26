@@ -1,6 +1,8 @@
-import MainLayout from "@/Layout/MainLayout";
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, Outlet } from "react-router-dom";
+
+import ProtectedRoute from "@/components/common/ProtectedRoute/ProtectedRoute";
+import MainLayout from "@/Layout/MainLayout";
 
 import { AuthProvider } from "@/contexts/auth-context";
 
@@ -21,82 +23,89 @@ function AppRoot() {
   );
 }
 
-export const router = createBrowserRouter([
-  {
-    element: <AppRoot />,
-    children: [
-      {
-        path: "/login",
-        element: (
-          <Suspense>
-            <Login />
-          </Suspense>
-        ),
-      },
-      {
-        path: "/",
-        element: <MainLayout />,
-        errorElement: (
-          <Suspense>
-            <Error />
-          </Suspense>
-        ),
-        children: [
-          {
-            index: true,
-            element: (
-              <Suspense>
-                <Home />
-              </Suspense>
-            ),
-          },
-          {
-            path: "/clients",
-            element: (
-              <Suspense>
-                <Clients />
-              </Suspense>
-            ),
-          },
-          {
-            path: "devis",
-            element: (
-              <Suspense>
-                <Devis />
-              </Suspense>
-            ),
-          },
-          {
-            path: "parameters",
-            element: (
-              <Suspense>
-                <Parameters />
-              </Suspense>
-            ),
-          },
-          {
-            path: "devis/:numero",
-            element: (
-              <Suspense>
-                <DevisDetails />
-              </Suspense>
-            ),
-          },
+export const router = createBrowserRouter(
+  [
+    {
+      element: <AppRoot />,
+      children: [
+        {
+          path: "/login",
+          element: (
+            <Suspense>
+              <Login />
+            </Suspense>
+          ),
+        },
 
-          {
-            path: "test",
-            element: (
-              <Suspense>
-                <Test />
-              </Suspense>
-            ),
-          },
-        ],
-      },
-    ],
-  },
-
+        // Toutes les routes ci-dessous nécessitent une connexion
+        {
+          element: <ProtectedRoute />,
+          children: [
+            {
+              path: "/",
+              element: <MainLayout />,
+              errorElement: (
+                <Suspense>
+                  <Error />
+                </Suspense>
+              ),
+              children: [
+                {
+                  index: true,
+                  element: (
+                    <Suspense>
+                      <Home />
+                    </Suspense>
+                  ),
+                },
+                {
+                  path: "/clients",
+                  element: (
+                    <Suspense>
+                      <Clients />
+                    </Suspense>
+                  ),
+                },
+                {
+                  path: "devis",
+                  element: (
+                    <Suspense>
+                      <Devis />
+                    </Suspense>
+                  ),
+                },
+                {
+                  path: "parameters",
+                  element: (
+                    <Suspense>
+                      <Parameters />
+                    </Suspense>
+                  ),
+                },
+                {
+                  path: "devis/:numero",
+                  element: (
+                    <Suspense>
+                      <DevisDetails />
+                    </Suspense>
+                  ),
+                },
+                {
+                  path: "test",
+                  element: (
+                    <Suspense>
+                      <Test />
+                    </Suspense>
+                  ),
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
   {
     basename: import.meta.env.PROD ? "/mydevis" : "/",
   },
-]);
+);
