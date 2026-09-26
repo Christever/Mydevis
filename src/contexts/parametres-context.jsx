@@ -42,7 +42,6 @@ export function ParametresProvider({ children }) {
         (unit) => unit.libelle.toLowerCase() === newUnit.toLowerCase(),
       );
       if (exist) {
-        setLoadingParams(false);
         return false;
       }
       const nouvellesUnits = [
@@ -88,13 +87,7 @@ export function ParametresProvider({ children }) {
       setLoadingParams(true);
 
       try {
-        const configRef = doc(
-          db,
-          "organisations",
-          profil.organisationId,
-          "parametres",
-          "configuration",
-        );
+        const configRef = getConfigRef(profil.organisationId)
 
         const configSnap = await getDoc(configRef);
 
@@ -241,13 +234,13 @@ export function ParametresProvider({ children }) {
         tvaApplicable,
         setTvaApplicable: sauvegarderTvaApplicable,
         tvaRates,
-        setTvaRates,
+        setTvaRates: sauvegarderTvaRates,
         addTvaRate,
         toggleTva,
         dureeValiditeDevis,
         setDureeValiditeDevis: sauvegarderDureeValiditeDevis,
         units,
-        setUnits,
+        setUnits: sauvegarderUnits,
         addUnit,
         toggleUnit,
       }}
