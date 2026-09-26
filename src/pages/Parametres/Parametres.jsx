@@ -71,8 +71,8 @@ export default function Parametres() {
       return;
     }
 
-    const exist = await addUnit(newUnit);
-    if (exist) {
+    const success = await addUnit(newUnit);
+    if (!success) {
       toast.info(`L unité ${newUnit} existe déjà.`);
       return;
     }

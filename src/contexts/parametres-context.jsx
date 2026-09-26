@@ -134,56 +134,34 @@ export function ParametresProvider({ children }) {
 
   // Validité des devis
   async function sauvegarderDureeValiditeDevis(valeur) {
-    try {
-      setDureeValiditeDevis(valeur);
-      await sauvegarderParametres({
-        dureeValiditeDevis: valeur,
-      });
-    } catch (error) {
-      console.error(
-        "Erreur lors de la sauvegarde de la durée de validité :",
-        error,
-      );
-    }
+    await sauvegarderParametres({
+      dureeValiditeDevis: valeur,
+    });
+    setDureeValiditeDevis(valeur);
   }
 
   // TVA Applicable
   async function sauvegarderTvaApplicable(valeur) {
-    try {
-      setTvaApplicable(valeur);
-      await sauvegarderParametres({
-        tvaApplicable: valeur,
-      });
-    } catch (error) {
-      console.error(
-        "Erreur lors de la sauvegarde de l'assujettissement à la TVA :",
-        error,
-      );
-    }
+    await sauvegarderParametres({
+      tvaApplicable: valeur,
+    });
+    setTvaApplicable(valeur);
   }
 
   // Taux TVA
   async function sauvegarderTvaRates(nouveauxTaux) {
-    try {
-      setTvaRates(nouveauxTaux);
-      await sauvegarderParametres({
-        tvaRates: nouveauxTaux,
-      });
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde des taux de TVA :", error);
-    }
+    await sauvegarderParametres({
+      tvaRates: nouveauxTaux,
+    });
+    setTvaRates(nouveauxTaux);
   }
 
   // Sauvegarde Unités
   async function sauvegarderUnits(nouvellesUnits) {
-    try {
-      setUnits(nouvellesUnits);
-      await sauvegarderParametres({
-        units: nouvellesUnits,
-      });
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde des unités :", error);
-    }
+    await sauvegarderParametres({
+      units: nouvellesUnits,
+    });
+    setUnits(nouvellesUnits);
   }
 
   //#endregion
