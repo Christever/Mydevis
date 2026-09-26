@@ -1,16 +1,19 @@
 @layer tailwind-base, primereact, tailwind-utilities;
 
-
-
-
 /* Tailwind Base */
 @layer tailwind-base {
-    @tailwind base;
+  @tailwind base;
 }
 
 /* Tailwind Components + Utilities */
 @layer tailwind-utilities {
-    @tailwind components;
-    @tailwind utilities;
-  
+  @tailwind components;
+  @tailwind utilities;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
 }

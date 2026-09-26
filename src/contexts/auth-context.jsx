@@ -14,47 +14,56 @@ export function AuthProvider({ children }) {
   const [loadingAuth, setLoadingAuth] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (currentUser) => {
-        try {
-          setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      try {
+        setUser(currentUser);
 
-          if (!currentUser) {
-            setProfil(null);
-            return;
-          }
-
-          const profilRef = doc(
-            db,
-            "users",
-            currentUser.uid
-          );
-
-          const profilSnap = await getDoc(profilRef);
-
-          if (!profilSnap.exists()) {
-            throw new Error(
-              "Profil utilisateur introuvable dans Firestore."
-            );
-          }
-
-          setProfil(profilSnap.data());
-        } catch (error) {
-          console.error(
-            "Erreur lors du chargement du profil :",
-            error
-          );
-
+        if (!currentUser) {
           setProfil(null);
-        } finally {
-          setLoadingAuth(false);
+          return;
         }
+
+        const profilRef = doc(db, "users", currentUser.uid);
+
+        const profilSnap = await getDoc(profilRef);
+
+        if (!profilSnap.exists()) {
+          throw new Error("Profil utilisateur introuvable dans Firestore.");
+        }
+
+        setProfil(profilSnap.data());
+      } catch (error) {
+        console.error("Erreur lors du chargement du profil :", error);
+
+        setProfil(null);
+      } finally {
+        setLoadingAuth(false);
       }
-    );
+    });
 
     return unsubscribe;
   }, []);
+
+  async function handleConnexion(email, password) {
+    const result = await connexion(email, password);
+
+    const currentUser = result.user;
+
+    const profilRef = doc(db, "users", currentUser.uid);
+
+    const profilSnap = await getDoc(profilRef);
+
+    if (!profilSnap.exists()) {
+      throw new Error("Profil utilisateur introuvable dans Firestore.");
+    }
+
+    const currentProfil = profilSnap.data();
+
+    return {
+      user: currentUser,
+      profil: currentProfil,
+    };
+  }
 
   return (
     <AuthContext.Provider
@@ -62,8 +71,8 @@ export function AuthProvider({ children }) {
         user,
         profil,
         loadingAuth,
-        connexion,
-        deconnexion
+        connexion: handleConnexion,
+        deconnexion,
       }}
     >
       {children}
