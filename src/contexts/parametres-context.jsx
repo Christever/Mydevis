@@ -6,6 +6,16 @@ import { useAuth } from "@/contexts/auth-context";
 
 export const ParametresContext = createContext(null);
 
+function getConfigRef(organisationId) {
+  return doc(
+    db,
+    "organisations",
+    organisationId,
+    "parametres",
+    "configuration",
+  );
+}
+
 export function ParametresProvider({ children }) {
   const { profil, loadingAuth } = useAuth();
   const [loadingParams, setLoadingParams] = useState(false);
@@ -25,37 +35,45 @@ export function ParametresProvider({ children }) {
   ]);
 
   // Add unit
-  const addUnit = (newUnit) => {
+  const addUnit = async (newUnit) => {
     setLoadingParams(true);
-    const exist = units.some(
-      (unit) => unit.libelle.toLowerCase() === newUnit.toLowerCase(),
-    );
-    if (exist) {
+    try {
+      const exist = units.some(
+        (unit) => unit.libelle.toLowerCase() === newUnit.toLowerCase(),
+      );
+      if (exist) {
+        setLoadingParams(false);
+        return false;
+      }
+      const nouvellesUnits = [
+        ...units,
+        {
+          id: Date.now(),
+          actif: true,
+          libelle: newUnit,
+        },
+      ];
+
+      await sauvegarderUnits(nouvellesUnits);
+      return true;
+    } finally {
       setLoadingParams(false);
-      return false;
     }
-    setUnits((currentUnits) => [
-      ...currentUnits,
-      {
-        id: Date.now(),
-        actif: true,
-        libelle: newUnit,
-      },
-    ]);
-    setLoadingParams(false);
   };
 
   // Toogle unit (ACTIF/INACTIF)
-  const toggleUnit = (id) => {
+  const toggleUnit = async (id) => {
     setLoadingParams(true);
-    setUnits((currentUnit) =>
-      currentUnit.map((unit) =>
+    try {
+      const nouvellesUnits = units.map((unit) =>
         unit.id === id ? { ...unit, actif: !unit.actif } : unit,
-      ),
-    );
-    setLoadingParams(false);
-  };
+      );
 
+      await sauvegarderUnits(nouvellesUnits);
+    } finally {
+      setLoadingParams(false);
+    }
+  };
   //#endregion UNITS
 
   // Durée validité d'un devis
@@ -91,6 +109,7 @@ export function ParametresProvider({ children }) {
         setTvaApplicable(data.tvaApplicable);
         setDureeValiditeDevis(data.dureeValiditeDevis);
         setTvaRates(data.tvaRates);
+        setUnits(data.units);
       } catch (error) {
         console.error("Erreur lors du chargement des paramètres :", error);
       } finally {
@@ -102,23 +121,22 @@ export function ParametresProvider({ children }) {
   }, [profil, loadingAuth]);
 
   //#region MISES A JOUR BDD
-  // Validité des devis
-  async function sauvegarderDureeValiditeDevis(valeur) {
+
+  async function sauvegarderParametres(modifications) {
     if (!profil?.organisationId) {
       return;
     }
 
+    const configRef = getConfigRef(profil.organisationId);
+
+    await updateDoc(configRef, modifications);
+  }
+
+  // Validité des devis
+  async function sauvegarderDureeValiditeDevis(valeur) {
     try {
       setDureeValiditeDevis(valeur);
-      const configRef = doc(
-        db,
-        "organisations",
-        profil.organisationId,
-        "parametres",
-        "configuration",
-      );
-
-      await updateDoc(configRef, {
+      await sauvegarderParametres({
         dureeValiditeDevis: valeur,
       });
     } catch (error) {
@@ -131,22 +149,9 @@ export function ParametresProvider({ children }) {
 
   // TVA Applicable
   async function sauvegarderTvaApplicable(valeur) {
-    if (!profil?.organisationId) {
-      return;
-    }
-
     try {
       setTvaApplicable(valeur);
-
-      const configRef = doc(
-        db,
-        "organisations",
-        profil.organisationId,
-        "parametres",
-        "configuration",
-      );
-
-      await updateDoc(configRef, {
+      await sauvegarderParametres({
         tvaApplicable: valeur,
       });
     } catch (error) {
@@ -157,28 +162,27 @@ export function ParametresProvider({ children }) {
     }
   }
 
-  // Add TVA
+  // Taux TVA
   async function sauvegarderTvaRates(nouveauxTaux) {
-    if (!profil?.organisationId) {
-      return;
-    }
-
     try {
       setTvaRates(nouveauxTaux);
-
-      const configRef = doc(
-        db,
-        "organisations",
-        profil.organisationId,
-        "parametres",
-        "configuration",
-      );
-
-      await updateDoc(configRef, {
+      await sauvegarderParametres({
         tvaRates: nouveauxTaux,
       });
     } catch (error) {
       console.error("Erreur lors de la sauvegarde des taux de TVA :", error);
+    }
+  }
+
+  // Sauvegarde Unités
+  async function sauvegarderUnits(nouvellesUnits) {
+    try {
+      setUnits(nouvellesUnits);
+      await sauvegarderParametres({
+        units: nouvellesUnits,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde des unités :", error);
     }
   }
 
@@ -211,40 +215,43 @@ export function ParametresProvider({ children }) {
   ]);
 
   // Add TVA
-  const addTvaRate = (newTax) => {
+  const addTvaRate = async (newTax) => {
     setLoadingParams(true);
-    const exist = tvaRates.some((tva) => tva.taux === newTax);
-    if (exist) {
+    try {
+      const exist = tvaRates.some((tva) => tva.taux === newTax);
+      if (exist) {
+        setLoadingParams(false);
+        return false;
+      }
+
+      const nouveauxTaux = [
+        ...tvaRates,
+        {
+          id: Date.now(),
+          taux: newTax,
+          actif: true,
+        },
+      ];
+
+      await sauvegarderTvaRates(nouveauxTaux);
+      return true;
+    } finally {
       setLoadingParams(false);
-      return false;
     }
-
-    const nouveauxTaux = [
-      ...tvaRates,
-      {
-        id: Date.now(),
-        taux: newTax,
-        actif: true,
-      },
-    ];
-
-    sauvegarderTvaRates(nouveauxTaux);
-
-    setLoadingParams(false);
-    return true;
   };
 
   // ToggleTVA (ACTIF/INACTIF)
-  const toggleTva = (id) => {
+  const toggleTva = async (id) => {
     setLoadingParams(true);
+    try {
+      const nouveauxTaux = tvaRates.map((tva) =>
+        tva.id === id ? { ...tva, actif: !tva.actif } : tva,
+      );
 
-    const nouveauxTaux = tvaRates.map((tva) =>
-      tva.id === id ? { ...tva, actif: !tva.actif } : tva,
-    );
-
-    sauvegarderTvaRates(nouveauxTaux);
-
-    setLoadingParams(false);
+      await sauvegarderTvaRates(nouveauxTaux);
+    } finally {
+      setLoadingParams(false);
+    }
   };
 
   //#endregion TVA

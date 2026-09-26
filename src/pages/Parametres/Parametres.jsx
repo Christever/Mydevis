@@ -45,13 +45,13 @@ export default function Parametres() {
     setNewTax(null);
   };
 
-  const handleAddTva = () => {
+  const handleAddTva = async () => {
     if (newTax === null) {
       setShowTvaForm(true);
       return;
     }
 
-    const success = addTvaRate(newTax);
+    const success = await addTvaRate(newTax);
     if (!success) {
       return toast.info(`Le taux de ${newTax} % existe déjà.`);
     }
@@ -65,17 +65,18 @@ export default function Parametres() {
     setNewUnit("");
   };
 
-  const handleAddUnit = () => {
+  const handleAddUnit = async () => {
     if (newUnit === "") {
       setShowUnitsForm(true);
       return;
     }
 
-    const exist = addUnit(newUnit);
+    const exist = await addUnit(newUnit);
     if (exist) {
       toast.info(`L unité ${newUnit} existe déjà.`);
       return;
     }
+    toast.success(`L unité ${newUnit} a bien été ajoutée.`)
     setNewUnit("");
     setShowUnitsForm(false);
   };
