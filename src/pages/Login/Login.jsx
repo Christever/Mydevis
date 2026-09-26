@@ -26,7 +26,7 @@ export default function Login() {
       toast.success(`Bienvenu, ${profil.pseudo}`);
       navigate("/");
     } catch (error) {
-      console.error("Erreur de connexion :", error);
+      toast.error("Impossible de vous connecter.")
     }
   }
 

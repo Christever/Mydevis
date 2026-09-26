@@ -5,6 +5,13 @@ import { confirmDialog } from "primereact/confirmdialog";
 export default function Header({ onMenuClick }) {
   const { profil, deconnexion } = useAuth();
 
+  const dateDuJour = new Date().toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   function demanderDeconnexion() {
     confirmDialog({
       message: "Voulez-vous vraiment vous déconnecter ?",
@@ -30,6 +37,10 @@ export default function Header({ onMenuClick }) {
         <h1 className="text-xl font-semibold text-slate-300">
           Gestion des devis
         </h1>
+
+        <span className="absolute left-1/2 hidden -translate-x-1/2 text-sm text-slate-300 md:block">
+          {dateDuJour}
+        </span>
 
         <div className="ml-auto flex items-center gap-3">
           {profil?.pseudo && (
