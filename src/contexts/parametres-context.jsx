@@ -20,19 +20,52 @@ export function ParametresProvider({ children }) {
   const { profil, loadingAuth } = useAuth();
   const [loadingParams, setLoadingParams] = useState(false);
 
+  // Cycle
+  useEffect(() => {
+    if (loadingAuth || !profil?.organisationId) {
+      return;
+    }
+
+    async function chargerParametres() {
+      setLoadingParams(true);
+
+      try {
+        const configRef = getConfigRef(profil.organisationId);
+
+        const configSnap = await getDoc(configRef);
+
+        if (!configSnap.exists()) {
+          throw new Error(
+            "Configuration des paramètres introuvable dans Firestore.",
+          );
+        }
+
+        const data = configSnap.data();
+
+        setTvaApplicable(data.tvaApplicable);
+        setDureeValiditeDevis(data.dureeValiditeDevis);
+        setTvaRates(data.tvaRates);
+        setUnits(data.units);
+      } catch (error) {
+        console.error("Erreur lors du chargement des paramètres :", error);
+      } finally {
+        setLoadingParams(false);
+      }
+    }
+
+    chargerParametres();
+  }, [profil, loadingAuth]);
+
   // Societé assujétie à la TVA ou pas
   const [tvaApplicable, setTvaApplicable] = useState(false);
 
+  // Durée validité d'un devis
+  const [dureeValiditeDevis, setDureeValiditeDevis] = useState(10);
+
   //#region UNITS
 
-  // defaults Units
-  const [units, setUnits] = useState([
-    { id: 1, libelle: "m²", actif: true },
-    { id: 2, libelle: "ml", actif: true },
-    { id: 3, libelle: "Pièce", actif: true },
-    { id: 4, libelle: "Heure", actif: true },
-    { id: 5, libelle: "Forfait", actif: true },
-  ]);
+  // Units
+  const [units, setUnits] = useState([]);
 
   // Add unit
   const addUnit = async (newUnit) => {
@@ -75,43 +108,52 @@ export function ParametresProvider({ children }) {
   };
   //#endregion UNITS
 
-  // Durée validité d'un devis
-  const [dureeValiditeDevis, setDureeValiditeDevis] = useState(10);
+  //#region  TVA
 
-  useEffect(() => {
-    if (loadingAuth || !profil?.organisationId) {
-      return;
-    }
+  // Defaults rates TVA
+  const [tvaRates, setTvaRates] = useState([]);
 
-    async function chargerParametres() {
-      setLoadingParams(true);
-
-      try {
-        const configRef = getConfigRef(profil.organisationId)
-
-        const configSnap = await getDoc(configRef);
-
-        if (!configSnap.exists()) {
-          throw new Error(
-            "Configuration des paramètres introuvable dans Firestore.",
-          );
-        }
-
-        const data = configSnap.data();
-
-        setTvaApplicable(data.tvaApplicable);
-        setDureeValiditeDevis(data.dureeValiditeDevis);
-        setTvaRates(data.tvaRates);
-        setUnits(data.units);
-      } catch (error) {
-        console.error("Erreur lors du chargement des paramètres :", error);
-      } finally {
+  // Add TVA
+  const addTvaRate = async (newTax) => {
+    setLoadingParams(true);
+    try {
+      const exist = tvaRates.some((tva) => tva.taux === newTax);
+      if (exist) {
         setLoadingParams(false);
+        return false;
       }
-    }
 
-    chargerParametres();
-  }, [profil, loadingAuth]);
+      const nouveauxTaux = [
+        ...tvaRates,
+        {
+          id: Date.now(),
+          taux: newTax,
+          actif: true,
+        },
+      ];
+
+      await sauvegarderTvaRates(nouveauxTaux);
+      return true;
+    } finally {
+      setLoadingParams(false);
+    }
+  };
+
+  // ToggleTVA (ACTIF/INACTIF)
+  const toggleTva = async (id) => {
+    setLoadingParams(true);
+    try {
+      const nouveauxTaux = tvaRates.map((tva) =>
+        tva.id === id ? { ...tva, actif: !tva.actif } : tva,
+      );
+
+      await sauvegarderTvaRates(nouveauxTaux);
+    } finally {
+      setLoadingParams(false);
+    }
+  };
+
+  //#endregion TVA
 
   //#region MISES A JOUR BDD
 
@@ -158,74 +200,6 @@ export function ParametresProvider({ children }) {
   }
 
   //#endregion
-
-  //#region  TVA
-
-  // Defaults rates TVA
-  const [tvaRates, setTvaRates] = useState([
-    {
-      id: 1,
-      taux: 5.5,
-      actif: true,
-    },
-    {
-      id: 2,
-      taux: 10,
-      actif: true,
-    },
-    {
-      id: 3,
-      taux: 20,
-      actif: true,
-    },
-    {
-      id: 4,
-      taux: 0,
-      actif: true,
-    },
-  ]);
-
-  // Add TVA
-  const addTvaRate = async (newTax) => {
-    setLoadingParams(true);
-    try {
-      const exist = tvaRates.some((tva) => tva.taux === newTax);
-      if (exist) {
-        setLoadingParams(false);
-        return false;
-      }
-
-      const nouveauxTaux = [
-        ...tvaRates,
-        {
-          id: Date.now(),
-          taux: newTax,
-          actif: true,
-        },
-      ];
-
-      await sauvegarderTvaRates(nouveauxTaux);
-      return true;
-    } finally {
-      setLoadingParams(false);
-    }
-  };
-
-  // ToggleTVA (ACTIF/INACTIF)
-  const toggleTva = async (id) => {
-    setLoadingParams(true);
-    try {
-      const nouveauxTaux = tvaRates.map((tva) =>
-        tva.id === id ? { ...tva, actif: !tva.actif } : tva,
-      );
-
-      await sauvegarderTvaRates(nouveauxTaux);
-    } finally {
-      setLoadingParams(false);
-    }
-  };
-
-  //#endregion TVA
 
   return (
     <ParametresContext.Provider
