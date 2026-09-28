@@ -13,7 +13,7 @@ export default function ClientForm({ onCancel, onSubmit, client }) {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(clientSchema),
     defaultValues: {
@@ -206,7 +206,7 @@ export default function ClientForm({ onCancel, onSubmit, client }) {
           onClick={onCancel}
         />
 
-        <Button type="submit" label="Enregistrer" />
+        <Button loading={isSubmitting} type="submit" label="Enregistrer" />
       </div>
       <small className="text-slate-500">
         <span className="text-red-500">*</span> Champ obligatoire
