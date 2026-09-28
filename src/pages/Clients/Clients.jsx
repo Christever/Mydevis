@@ -16,13 +16,13 @@ export default function Clients() {
   // Context
   const { loadingClients, clients, addClient, updateClient} = useContext(ClientsContext)
 
-  const handleAddClient = (client) => {
-    addClient(client);
+  const handleAddClient = async (client) => {
+    await addClient(client);
     setShowForm(false);
   };
 
-  const handleUpdateClient = (updatedClient) => {
-    updateClient(updatedClient);
+  const handleUpdateClient = async (updatedClient) => {
+    await updateClient(updatedClient);
     setSelectedClient(null);
     setShowForm(false);
   };
