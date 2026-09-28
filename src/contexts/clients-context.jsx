@@ -1,6 +1,12 @@
 import { createContext, useEffect, useState } from "react";
 
-import {doc, addDoc, updateDoc, collection, getDocs } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 
 import { db } from "@/firebase/config";
 import { useAuth } from "@/contexts/auth-context";
@@ -15,7 +21,7 @@ export function ClientsProvider({ children }) {
   const [loadingClients, setLoadingClients] = useState(false);
   const { profil, loadingAuth } = useAuth();
 
-  // clients for dev.
+  // Clients
   const [clients, setClients] = useState([]);
 
   // Cycle
