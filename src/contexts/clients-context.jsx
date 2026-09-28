@@ -1,104 +1,118 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
+
+import {doc, addDoc, updateDoc, collection, getDocs } from "firebase/firestore";
+
+import { db } from "@/firebase/config";
+import { useAuth } from "@/contexts/auth-context";
 
 export const ClientsContext = createContext(null);
 
+function getClientsRef(organisationId) {
+  return collection(db, "organisations", organisationId, "clients");
+}
+
 export function ClientsProvider({ children }) {
   const [loadingClients, setLoadingClients] = useState(false);
+  const { profil, loadingAuth } = useAuth();
 
   // clients for dev.
-  const [clients, setClients] = useState([
-    {
-      id: 1,
-      nom: "Dupont",
-      prenom: "Jean",
-      telephone: "06 12 34 56 78",
-      email: "jean.dupont@example.fr",
-      adresse: {
-        ligne1: "12 rue des Lilas",
-        ligne2: "",
-        codePostal: "34600",
-        ville: "Bédarieux",
-      },
-    },
-    {
-      id: 2,
-      nom: "Martin",
-      prenom: "Marie",
-      telephone: "07 23 45 67 89",
-      email: "marie.martin@example.fr",
-      adresse: {
-        ligne1: "25 avenue Victor Hugo",
-        ligne2: "Appartement 4",
-        codePostal: "34600",
-        ville: "Bédarieux",
-      },
-    },
-    {
-      id: 3,
-      nom: "Durand",
-      prenom: "Pierre",
-      telephone: "06 34 56 78 90",
-      email: "pierre.durand@example.fr",
-      adresse: {
-        ligne1: "8 rue de la République",
-        ligne2: "",
-        codePostal: "34700",
-        ville: "Lodève",
-      },
-    },
-    {
-      id: 4,
-      nom: "Bernard",
-      prenom: "Sophie",
-      telephone: "07 45 67 89 01",
-      email: "sophie.bernard@example.fr",
-      adresse: {
-        ligne1: "3 chemin des Vignes",
-        ligne2: "",
-        codePostal: "34230",
-        ville: "Paulhan",
-      },
-    },
-    {
-      id: 5,
-      nom: "Doe",
-      prenom: "Pierre",
-      telephone: "06 45 67 89 10",
-      email: "pierre.doe@example.fr",
-      adresse: {
-        ligne1: "18 rue Jean Jaurès",
-        ligne2: "",
-        codePostal: "34120",
-        ville: "Pézenas",
-      },
-    },
-  ]);
+  const [clients, setClients] = useState([]);
+
+  // Cycle
+  useEffect(() => {
+    if (loadingAuth || !profil?.organisationId) {
+      return;
+    }
+
+    async function chargerClients() {
+      setLoadingClients(true);
+
+      try {
+        const clientsRef = getClientsRef(profil.organisationId);
+        const clientsSnap = await getDocs(clientsRef);
+
+        const clientsCharges = clientsSnap.docs.map((clientDoc) => ({
+          id: clientDoc.id,
+          ...clientDoc.data(),
+        }));
+
+        setClients(clientsCharges);
+      } catch (error) {
+        console.error("Erreur lors du chargement des clients :", error);
+      } finally {
+        setLoadingClients(false);
+      }
+    }
+
+    chargerClients();
+  }, [profil, loadingAuth]);
 
   //   Add new client
-  const addClient = (newClient) => {
+  const addClient = async (newClient) => {
     setLoadingClients(true);
 
-    const clientCree = {
-      ...newClient,
-      id: Date.now(),
-    };
+    try {
+      const clientsRef = getClientsRef(profil.organisationId);
 
-    setClients((currentClients) => [...currentClients, clientCree]);
+      const clientData = {
+        nom: newClient.nom,
+        prenom: newClient.prenom,
+        telephone: newClient.telephone,
+        email: newClient.email,
+        adresse: newClient.adresse,
+      };
 
-    setLoadingClients(false);
+      const clientRef = await addDoc(clientsRef, clientData);
 
-    return clientCree;
+      const clientCree = {
+        id: clientRef.id,
+        ...clientData,
+      };
+
+      setClients((currentClients) => [...currentClients, clientCree]);
+
+      return clientCree;
+    } finally {
+      setLoadingClients(false);
+    }
   };
 
   // Update client
-  const updateClient = (updatedClient) => {
+  const updateClient = async (updatedClient) => {
     setLoadingClients(true);
-    setClients((currentClients) =>
-      currentClients.map((client) =>
-        client.id === updatedClient.id ? updatedClient : client,
-      ),
-    );
-    setLoadingClients(false);
+
+    try {
+      const clientRef = doc(
+        db,
+        "organisations",
+        profil.organisationId,
+        "clients",
+        updatedClient.id,
+      );
+
+      const clientData = {
+        nom: updatedClient.nom,
+        prenom: updatedClient.prenom,
+        telephone: updatedClient.telephone,
+        email: updatedClient.email,
+        adresse: updatedClient.adresse,
+      };
+
+      await updateDoc(clientRef, clientData);
+
+      const clientMisAJour = {
+        id: updatedClient.id,
+        ...clientData,
+      };
+
+      setClients((currentClients) =>
+        currentClients.map((client) =>
+          client.id === updatedClient.id ? clientMisAJour : client,
+        ),
+      );
+    } finally {
+      setLoadingClients(false);
+    }
   };
 
   return (
@@ -106,7 +120,6 @@ export function ClientsProvider({ children }) {
       value={{
         loadingClients,
         clients,
-        setClients,
         addClient,
         updateClient,
       }}
