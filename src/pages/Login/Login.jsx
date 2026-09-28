@@ -24,6 +24,12 @@ export default function Login() {
     if (loadingConnexion) {
       return;
     }
+
+    if (!email || !password) {
+      toast.error("Veuillez renseigner une adresse mail et un mot de passe");
+      return;
+    }
+
     setLoadingConnexion(true);
 
     try {
