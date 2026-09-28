@@ -10,27 +10,35 @@ import { toast } from "react-toastify";
 import Loader from "@/components/common/Loader";
 
 export default function Login() {
-  const { connexion, profil, loadingAuth } = useAuth();
+  const { connexion, loadingAuth } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [loadingConnexion, setLoadingConnexion] = useState(false);
 
   const navigate = useNavigate();
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (loadingConnexion) {
+      return;
+    }
+    setLoadingConnexion(true);
 
     try {
       const result = await connexion(email, password);
       toast.success(`Bienvenu, ${result.profil.pseudo}`);
       navigate("/");
     } catch (error) {
-      toast.error("Impossible de vous connecter.")
+      toast.error("Impossible de vous connecter.");
+    } finally {
+      setLoadingConnexion(false);
     }
   }
 
   if (loadingAuth) {
-    return <Loader/>
+    return <Loader />;
   }
 
   return (
@@ -68,7 +76,17 @@ export default function Login() {
             />
           </div>
 
-          <Button type="submit" label="Se connecter" icon="pi pi-sign-in" />
+          <Button
+            loading={loadingConnexion}
+            type="submit"
+            label="Se connecter"
+            icon="pi pi-sign-in"
+          />
+          {loadingConnexion && (
+            <small className="text-center text-slate-500">
+              Connexion en cours...
+            </small>
+          )}
         </form>
       </div>
     </div>
