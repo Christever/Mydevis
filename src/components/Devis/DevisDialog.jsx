@@ -98,6 +98,8 @@ export default function DevisDialog({ visible, onHide, clients, onSave }) {
   };
 
   const handleFormSubmit = (data) => {
+    console.log("FORMULAIRE DEVIS :", data);
+
     const clientSelectionne = data.client;
 
     const client = clients.find((client) => client.id === clientSelectionne.id);
