@@ -71,10 +71,7 @@ export default function DevisDialog({ visible, onHide, clients, onSave }) {
 
   // Création d'un nouveau client
   const handleCreateClient = (data) => {
-    console.log("Client reçu par DevisDialog :", data);
-
     const nouveauClient = addClient(data);
-    console.log("Client créé par addClient :", nouveauClient);
 
     setValue("client", nouveauClient, {
       shouldValidate: true,
